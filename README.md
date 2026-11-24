@@ -3,12 +3,32 @@
 > **Full-Stack Academic Capstone Project**  
 > Built with Python Flask, SQLAlchemy, SQLite/MySQL, Bootstrap 5, Chart.js, and ReportLab.
 
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/gowthamvk18/personal-finance-portfolio-tracker)
+[![Deploy to Koyeb](https://www.koyeb.com/static/images/deploy/button.svg)](https://app.koyeb.com/deploy?type=git&repository=github.com/gowthamvk18/personal-finance-portfolio-tracker&branch=master&name=finance-tracker)
+
+![GitHub Repo](https://img.shields.io/badge/GitHub-gowthamvk18%2Fpersonal--finance--portfolio--tracker-blue?logo=github)
 ![Python](https://img.shields.io/badge/Python-3.12-blue.svg)
 ![Flask](https://img.shields.io/badge/Flask-3.1-black.svg)
 ![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0-red.svg)
 ![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-purple.svg)
 ![Tests](https://img.shields.io/badge/Tests-31%20Passed-brightgreen.svg)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
+
+---
+
+## Quick Permanent Cloud Deployment
+
+Click either button below to deploy this application to the cloud with a **permanent 24/7 live link**:
+
+1. **[Deploy to Render (Permanent Free Hosting)](https://render.com/deploy?repo=https://github.com/gowthamvk18/personal-finance-portfolio-tracker)**
+   - Click the button or link above.
+   - Sign in with your GitHub account (`gowthamvk18`).
+   - Click **Apply Blueprint**.
+   - Render automatically builds the dependencies, executes `seed_data.py`, and assigns your permanent 24/7 URL (e.g. `https://personal-finance-tracker-xxxx.onrender.com`).
+
+2. **[Deploy to Koyeb (Global Cloud Serverless)](https://app.koyeb.com/deploy?type=git&repository=github.com/gowthamvk18/personal-finance-portfolio-tracker&branch=master&name=finance-tracker)**
+   - Click the link, authenticate with GitHub, and launch.
+   - Provides an instant permanent `https://<app-name>.koyeb.app` URL.
 
 ---
 
