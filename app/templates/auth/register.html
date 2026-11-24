@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Create Account - Personal Finance Portfolio Tracker{% endblock %}
+{% block auth_content %}
+<div class="auth-wrapper">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <i class="fa-solid fa-vault"></i>
+      <h3 class="fw-bold mt-2 mb-1 text-dark">Create Account</h3>
+      <p class="text-muted small">Start tracking your income, expenses & investments</p>
+    </div>
+
+    <form method="POST" action="{{ url_for('auth.register') }}" novalidate>
+      {{ form.hidden_tag() }}
+
+      <div class="mb-3">
+        {{ form.name.label(class="form-label fw-semibold small text-dark") }}
+        <div class="input-group">
+          <span class="input-group-text bg-light text-muted border-end-0"><i class="fa-solid fa-user"></i></span>
+          {{ form.name(class="form-control border-start-0 ps-0" + (" is-invalid" if form.name.errors else ""), placeholder="Adarsh Sharma") }}
+        </div>
+        {% for error in form.name.errors %}
+          <div class="text-danger small mt-1">{{ error }}</div>
+        {% endfor %}
+      </div>
+
+      <div class="mb-3">
+        {{ form.email.label(class="form-label fw-semibold small text-dark") }}
+        <div class="input-group">
+          <span class="input-group-text bg-light text-muted border-end-0"><i class="fa-solid fa-envelope"></i></span>
+          {{ form.email(class="form-control border-start-0 ps-0" + (" is-invalid" if form.email.errors else ""), placeholder="name@example.com") }}
+        </div>
+        {% for error in form.email.errors %}
+          <div class="text-danger small mt-1">{{ error }}</div>
+        {% endfor %}
+      </div>
+
+      <div class="mb-3">
+        {{ form.currency.label(class="form-label fw-semibold small text-dark") }}
+        <div class="input-group">
+          <span class="input-group-text bg-light text-muted border-end-0"><i class="fa-solid fa-coins"></i></span>
+          {{ form.currency(class="form-select border-start-0 ps-0" + (" is-invalid" if form.currency.errors else "")) }}
+        </div>
+        {% for error in form.currency.errors %}
+          <div class="text-danger small mt-1">{{ error }}</div>
+        {% endfor %}
+      </div>
+
+      <div class="mb-3">
+        {{ form.password.label(class="form-label fw-semibold small text-dark") }}
+        <div class="input-group">
+          <span class="input-group-text bg-light text-muted border-end-0"><i class="fa-solid fa-lock"></i></span>
+          {{ form.password(class="form-control border-start-0 ps-0" + (" is-invalid" if form.password.errors else ""), placeholder="Minimum 8 characters") }}
+        </div>
+        {% for error in form.password.errors %}
+          <div class="text-danger small mt-1">{{ error }}</div>
+        {% endfor %}
+      </div>
+
+      <div class="mb-4">
+        {{ form.confirm_password.label(class="form-label fw-semibold small text-dark") }}
+        <div class="input-group">
+          <span class="input-group-text bg-light text-muted border-end-0"><i class="fa-solid fa-shield-check"></i></span>
+          {{ form.confirm_password(class="form-control border-start-0 ps-0" + (" is-invalid" if form.confirm_password.errors else ""), placeholder="Repeat password") }}
+        </div>
+        {% for error in form.confirm_password.errors %}
+          <div class="text-danger small mt-1">{{ error }}</div>
+        {% endfor %}
+      </div>
+
+      <div class="d-grid mb-3">
+        {{ form.submit(class="btn btn-primary py-2 fw-semibold") }}
+      </div>
+    </form>
+
+    <div class="border-top pt-3 text-center">
+      <span class="text-muted small">Already have an account? </span>
+      <a href="{{ url_for('auth.login') }}" class="small fw-semibold text-primary text-decoration-none">Sign In</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} - Personal Finance Portfolio Tracker{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-9 col-lg-7">
+    <div class="card-fin">
+      <div class="card-header">
+        <span class="fw-bold"><i class="fa-solid fa-coins text-warning me-2"></i>{{ title }}</span>
+        <a href="{{ url_for('investments.index') }}" class="btn btn-sm btn-outline-secondary">
+          <i class="fa-solid fa-arrow-left me-1"></i> Back to Portfolio
+        </a>
+      </div>
+
+      <div class="card-body p-4">
+        <form method="POST" action="" novalidate id="investmentForm">
+          {{ form.hidden_tag() }}
+
+          <div class="row g-3 mb-3">
+            <!-- Asset Name -->
+            <div class="col-12 col-sm-7">
+              {{ form.name.label(class="form-label fw-semibold small") }}
+              {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else ""), placeholder="e.g. HDFC Bank Ltd, Parag Parikh Flexi Cap, 24K Sovereign Gold Bond") }}
+              {% for error in form.name.errors %}
+                <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <!-- Investment Type -->
+            <div class="col-12 col-sm-5">
+              {{ form.investment_type.label(class="form-label fw-semibold small") }}
+              {{ form.investment_type(class="form-select" + (" is-invalid" if form.investment_type.errors else ""), id="invTypeSelect") }}
+              {% for error in form.investment_type.errors %}
+                <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <!-- Quantity -->
+            <div class="col-12 col-sm-4">
+              <label class="form-label fw-semibold small" id="quantityLabel">Quantity / Units</label>
+              {{ form.quantity(class="form-control" + (" is-invalid" if form.quantity.errors else ""), placeholder="1.0000") }}
+              {% for error in form.quantity.errors %}
+                <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <!-- Purchase Price -->
+            <div class="col-12 col-sm-4">
+              <label class="form-label fw-semibold small" id="purchasePriceLabel">Purchase Price (Per Unit)</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light fw-bold text-muted">{{ user_currency_symbol }}</span>
+                {{ form.purchase_price(class="form-control" + (" is-invalid" if form.purchase_price.errors else ""), placeholder="0.00") }}
+              </div>
+              {% for error in form.purchase_price.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <!-- Current Price -->
+            <div class="col-12 col-sm-4">
+              <label class="form-label fw-semibold small" id="currentPriceLabel">Current Price (Per Unit)</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light fw-bold text-muted">{{ user_currency_symbol }}</span>
+                {{ form.current_price(class="form-control" + (" is-invalid" if form.current_price.errors else ""), placeholder="0.00") }}
+              </div>
+              {% for error in form.current_price.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <!-- Purchase Date -->
+            <div class="col-12 col-sm-6">
+              {{ form.purchase_date.label(class="form-label fw-semibold small") }}
+              {{ form.purchase_date(class="form-control" + (" is-invalid" if form.purchase_date.errors else "")) }}
+              {% for error in form.purchase_date.errors %}
+                <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <!-- Institution / Platform -->
+            <div class="col-12 col-sm-6">
+              {{ form.institution.label(class="form-label fw-semibold small") }}
+              {{ form.institution(class="form-control" + (" is-invalid" if form.institution.errors else ""), placeholder="e.g. Zerodha, Groww, SBI Bank, MMTC") }}
+              {% for error in form.institution.errors %}
+                <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- Fixed Deposit Specific Container -->
+          <div id="fdFieldsContainer" class="p-3 mb-3 bg-light rounded border" style="display: none;">
+            <div class="fw-semibold small text-primary mb-2"><i class="fa-solid fa-building-columns me-1"></i> Fixed Deposit Terms</div>
+            <div class="row g-3">
+              <div class="col-12 col-sm-6">
+                {{ form.interest_rate.label(class="form-label small") }}
+                <div class="input-group input-group-sm">
+                  {{ form.interest_rate(class="form-control", placeholder="7.10") }}
+                  <span class="input-group-text">% p.a.</span>
+                </div>
+              </div>
+              <div class="col-12 col-sm-6">
+                {{ form.maturity_date.label(class="form-label small") }}
+                {{ form.maturity_date(class="form-control form-control-sm") }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Notes -->
+          <div class="mb-4">
+            {{ form.notes.label(class="form-label fw-semibold small") }}
+            {{ form.notes(class="form-control" + (" is-invalid" if form.notes.errors else ""), rows="3", placeholder="Folio number, certificate ref, strategy notes...") }}
+            {% for error in form.notes.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="d-flex gap-2">
+            {{ form.submit(class="btn btn-primary px-4 fw-semibold") }}
+            <a href="{{ url_for('investments.index') }}" class="btn btn-outline-secondary px-3">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const invTypeSelect = document.getElementById("invTypeSelect");
+  const fdContainer = document.getElementById("fdFieldsContainer");
+  const qtyLabel = document.getElementById("quantityLabel");
+  const buyLabel = document.getElementById("purchasePriceLabel");
+  const curLabel = document.getElementById("currentPriceLabel");
+
+  function toggleTypeFields() {
+    const val = invTypeSelect.value;
+    if (val === "fixed_deposits") {
+      fdContainer.style.display = "block";
+      qtyLabel.textContent = "Deposit Count / Units";
+      buyLabel.textContent = "Principal Amount";
+      curLabel.textContent = "Maturity / Current Value";
+    } else if (val === "gold") {
+      fdContainer.style.display = "none";
+      qtyLabel.textContent = "Quantity (Grams)";
+      buyLabel.textContent = "Buy Price (Per Gram)";
+      curLabel.textContent = "Current Price (Per Gram)";
+    } else {
+      fdContainer.style.display = "none";
+      qtyLabel.textContent = "Quantity / Units";
+      buyLabel.textContent = "Purchase Price (Per Unit)";
+      curLabel.textContent = "Current Price (Per Unit)";
+    }
+  }
+
+  invTypeSelect.addEventListener("change", toggleTypeFields);
+  toggleTypeFields();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,358 @@
+{% extends "base.html" %}
+{% block title %}Reports - Personal Finance Portfolio Tracker{% endblock %}
+{% block page_title %}Financial Intelligence Reports{% endblock %}
+
+{% block content %}
+<!-- Report Configuration Card -->
+<div class="card-fin mb-4">
+  <div class="card-body p-4">
+    <form method="GET" action="{{ url_for('reports.index') }}" class="row g-3 align-items-end">
+      <!-- Report Type Select -->
+      <div class="col-12 col-md-4">
+        <label class="form-label small fw-semibold">Select Report Type</label>
+        <select name="report_type" class="form-select form-select-sm" id="reportTypeSelect" onchange="this.form.submit()">
+          <option value="annual_summary" {% if report_type == 'annual_summary' %}selected{% endif %}>Annual Financial Summary</option>
+          <option value="daily_summary" {% if report_type == 'daily_summary' %}selected{% endif %}>Daily Financial Summary</option>
+          <option value="monthly_income" {% if report_type == 'monthly_income' %}selected{% endif %}>Monthly Income Report</option>
+          <option value="monthly_expense" {% if report_type == 'monthly_expense' %}selected{% endif %}>Monthly Expense Report</option>
+          <option value="category_expense" {% if report_type == 'category_expense' %}selected{% endif %}>Category-wise Expense Breakdown</option>
+          <option value="investment_performance" {% if report_type == 'investment_performance' %}selected{% endif %}>Investment Portfolio Performance</option>
+          <option value="net_worth" {% if report_type == 'net_worth' %}selected{% endif %}>Net Worth Statement (Assets vs Liabilities)</option>
+          <option value="budget_utilization" {% if report_type == 'budget_utilization' %}selected{% endif %}>Budget Utilization Report</option>
+        </select>
+      </div>
+
+      <!-- Date Range (Start / End) -->
+      <div class="col-6 col-md-3">
+        <label class="form-label small fw-semibold">From Date</label>
+        <input type="date" name="start_date" class="form-control form-control-sm" value="{{ start_date }}">
+      </div>
+
+      <div class="col-6 col-md-3">
+        <label class="form-label small fw-semibold">To Date / Target Date</label>
+        <input type="date" name="end_date" class="form-control form-control-sm" value="{{ end_date }}">
+      </div>
+
+      <!-- Submit / Filter Button -->
+      <div class="col-12 col-md-2 d-flex gap-2">
+        <button type="submit" class="btn btn-sm btn-primary flex-grow-1">
+          <i class="fa-solid fa-arrows-rotate me-1"></i> Generate
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Report Preview Card -->
+<div class="card-fin">
+  <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <div>
+      <h6 class="fw-bold mb-0 text-dark">{{ report_data.title }}</h6>
+      <span class="small text-muted">Previewing live financial records</span>
+    </div>
+    <div class="d-flex gap-2">
+      <!-- Export CSV -->
+      <a href="{{ url_for('reports.export_csv', report_type=report_type, start_date=start_date, end_date=end_date, year=year, month=month) }}" class="btn btn-sm btn-outline-success">
+        <i class="fa-solid fa-file-csv me-1"></i> Export CSV
+      </a>
+
+      <!-- Export PDF -->
+      <a href="{{ url_for('reports.export_pdf', report_type=report_type, start_date=start_date, end_date=end_date, year=year, month=month) }}" class="btn btn-sm btn-outline-danger" target="_blank">
+        <i class="fa-solid fa-file-pdf me-1"></i> Download PDF
+      </a>
+    </div>
+  </div>
+
+  <div class="card-body p-0">
+    <!-- 1. Transactions-based Preview (Daily, Income, Expense, Default) -->
+    {% if report_type in ['daily_summary', 'monthly_income', 'monthly_expense', 'transactions'] %}
+      {% if report_data.transactions %}
+        <div class="p-3 bg-light border-bottom d-flex justify-content-between">
+          <span class="small text-muted">Total Records: <strong>{{ report_data.count }}</strong></span>
+          <span class="small fw-bold">
+            {% if report_type == 'monthly_income' %}
+              Total Income: <span class="text-income">{{ report_data.total_income | currency }}</span>
+            {% elif report_type == 'monthly_expense' %}
+              Total Expenses: <span class="text-expense">{{ report_data.total_expense | currency }}</span>
+            {% elif report_type == 'daily_summary' %}
+              Income: <span class="text-income">{{ report_data.income_total | currency }}</span> | 
+              Expense: <span class="text-expense">{{ report_data.expense_total | currency }}</span> | 
+              Net: <span class="{% if report_data.net_total >= 0 %}text-income{% else %}text-danger{% endif %}">{{ report_data.net_total | currency }}</span>
+            {% endif %}
+          </span>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-fin align-middle">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Category</th>
+                <th>Description</th>
+                <th>Payment Method</th>
+                <th class="text-end">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for t in report_data.transactions %}
+                <tr>
+                  <td class="small">{{ t.transaction_date | date_format }}</td>
+                  <td>
+                    <span class="badge badge-fin {% if t.is_income %}badge-income{% else %}badge-expense{% endif %}">
+                      {{ t.transaction_type.title() }}
+                    </span>
+                  </td>
+                  <td><span class="badge bg-light text-dark border">{{ t.category }}</span></td>
+                  <td class="fw-semibold text-dark">{{ t.description }}</td>
+                  <td class="small text-muted">{{ t.payment_method }}</td>
+                  <td class="text-end fw-bold {% if t.is_income %}text-income{% else %}text-expense{% endif %}">
+                    {% if t.is_income %}+{% else %}-{% endif %}{{ t.decimal_amount | currency }}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="text-center py-5 text-muted">
+          <i class="fa-solid fa-folder-open fa-2x mb-2"></i>
+          <p>No transactions match the selected reporting period.</p>
+        </div>
+      {% endif %}
+
+    <!-- 2. Category-wise Expense Preview -->
+    {% elif report_type == 'category_expense' %}
+      {% if report_data.categories %}
+        <div class="table-responsive">
+          <table class="table table-fin align-middle">
+            <thead>
+              <tr>
+                <th>Category</th>
+                <th>Transaction Count</th>
+                <th class="text-end">Total Spent</th>
+                <th class="text-end">Percentage Share</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for c in report_data.categories %}
+                <tr>
+                  <td class="fw-bold text-dark">{{ c.category }}</td>
+                  <td>{{ c.count }}</td>
+                  <td class="text-end small fw-semibold text-expense">{{ c.total | currency }}</td>
+                  <td class="text-end small fw-bold">{{ c.percentage }}%</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+            <tfoot class="table-light">
+              <tr class="fw-bold">
+                <td>TOTAL</td>
+                <td>-</td>
+                <td class="text-end text-expense">{{ report_data.total_expense | currency }}</td>
+                <td class="text-end">100.0%</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      {% else %}
+        <div class="text-center py-5 text-muted">
+          <i class="fa-solid fa-chart-pie fa-2x mb-2"></i>
+          <p>No expenses found in this date range.</p>
+        </div>
+      {% endif %}
+
+    <!-- 3. Annual Financial Summary Preview -->
+    {% elif report_type == 'annual_summary' %}
+      <div class="table-responsive">
+        <table class="table table-fin align-middle">
+          <thead>
+            <tr>
+              <th>Month</th>
+              <th class="text-end">Total Income</th>
+              <th class="text-end">Total Expenses</th>
+              <th class="text-end">Net Savings</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for m in report_data.monthly_data %}
+              <tr>
+                <td class="fw-semibold text-dark">{{ m.month }}</td>
+                <td class="text-end small text-income">{{ m.income | currency }}</td>
+                <td class="text-end small text-expense">{{ m.expense | currency }}</td>
+                <td class="text-end small fw-bold {% if m.savings >= 0 %}text-income{% else %}text-danger{% endif %}">
+                  {% if m.savings >= 0 %}+{% endif %}{{ m.savings | currency }}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot class="table-light">
+            <tr class="fw-bold">
+              <td>ANNUAL TOTAL</td>
+              <td class="text-end text-income">{{ report_data.annual_income | currency }}</td>
+              <td class="text-end text-expense">{{ report_data.annual_expense | currency }}</td>
+              <td class="text-end {% if report_data.annual_savings >= 0 %}text-income{% else %}text-danger{% endif %}">
+                {% if report_data.annual_savings >= 0 %}+{% endif %}{{ report_data.annual_savings | currency }}
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+    <!-- 4. Investment Performance Preview -->
+    {% elif report_type == 'investment_performance' %}
+      {% set p = report_data.portfolio %}
+      <div class="table-responsive">
+        <table class="table table-fin align-middle">
+          <thead>
+            <tr>
+              <th>Asset Name</th>
+              <th>Type</th>
+              <th class="text-end">Qty</th>
+              <th class="text-end">Buy Price</th>
+              <th class="text-end">Current Price</th>
+              <th class="text-end">Invested</th>
+              <th class="text-end">Current Value</th>
+              <th class="text-end">P &amp; L</th>
+              <th class="text-end">Return</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for h in p.holdings %}
+              <tr>
+                <td class="fw-bold text-dark">{{ h.name }}</td>
+                <td><span class="badge bg-light text-dark border">{{ h.type_display }}</span></td>
+                <td class="text-end small">{{ h.quantity }}</td>
+                <td class="text-end small">{{ h.purchase_price | currency }}</td>
+                <td class="text-end small">{{ h.current_price | currency }}</td>
+                <td class="text-end small fw-semibold">{{ h.invested_value | currency }}</td>
+                <td class="text-end small fw-bold text-dark">{{ h.current_value | currency }}</td>
+                <td class="text-end small fw-bold {% if h.profit_loss >= 0 %}text-income{% else %}text-danger{% endif %}">
+                  {% if h.profit_loss >= 0 %}+{% endif %}{{ h.profit_loss | currency }}
+                </td>
+                <td class="text-end small fw-bold {% if h.return_percentage >= 0 %}text-income{% else %}text-danger{% endif %}">
+                  {% if h.return_percentage >= 0 %}+{% endif %}{{ h.return_percentage }}%
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot class="table-light">
+            <tr class="fw-bold">
+              <td colspan="5">TOTAL PORTFOLIO</td>
+              <td class="text-end">{{ p.total_invested | currency }}</td>
+              <td class="text-end text-primary">{{ p.total_current | currency }}</td>
+              <td class="text-end {% if p.total_profit_loss >= 0 %}text-income{% else %}text-danger{% endif %}">
+                {% if p.total_profit_loss >= 0 %}+{% endif %}{{ p.total_profit_loss | currency }}
+              </td>
+              <td class="text-end {% if p.total_return_percentage >= 0 %}text-income{% else %}text-danger{% endif %}">
+                {% if p.total_return_percentage >= 0 %}+{% endif %}{{ p.total_return_percentage }}%
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+    <!-- 5. Net Worth Statement Preview -->
+    {% elif report_type == 'net_worth' %}
+      {% set nw = report_data.net_worth %}
+      <div class="table-responsive">
+        <table class="table table-fin align-middle">
+          <thead>
+            <tr>
+              <th>Classification</th>
+              <th>Asset / Liability Item</th>
+              <th class="text-end">Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="badge badge-fin badge-income">Liquid Asset</span></td>
+              <td>Cash &amp; Bank Balance (Total Incomes - Expenses)</td>
+              <td class="text-end fw-semibold">{{ nw.cash_balance | currency }}</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-fin badge-normal">Equity Asset</span></td>
+              <td>Stocks Portfolio Value</td>
+              <td class="text-end fw-semibold">{{ nw.stocks_value | currency }}</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-fin badge-normal">Mutual Funds</span></td>
+              <td>Mutual Funds Portfolio Value</td>
+              <td class="text-end fw-semibold">{{ nw.mutual_funds_value | currency }}</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-fin badge-normal">Fixed Income</span></td>
+              <td>Fixed Deposits Portfolio Value</td>
+              <td class="text-end fw-semibold">{{ nw.fixed_deposits_value | currency }}</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-fin badge-normal">Precious Metals</span></td>
+              <td>Gold Holdings Value</td>
+              <td class="text-end fw-semibold">{{ nw.gold_value | currency }}</td>
+            </tr>
+            <tr class="table-info fw-bold">
+              <td>TOTAL ASSETS</td>
+              <td>Cash Balance + All Investment Assets</td>
+              <td class="text-end text-primary">{{ nw.total_assets | currency }}</td>
+            </tr>
+            <tr class="table-danger fw-bold">
+              <td>TOTAL LIABILITIES</td>
+              <td>Active Loans, Credit Cards &amp; Debts</td>
+              <td class="text-end text-danger">-{{ nw.total_liabilities | currency }}</td>
+            </tr>
+            <tr class="table-success fw-bold fs-6">
+              <td>NET WORTH</td>
+              <td>Total Assets - Total Liabilities</td>
+              <td class="text-end text-success">{{ nw.net_worth | currency }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    <!-- 6. Budget Utilization Preview -->
+    {% elif report_type == 'budget_utilization' %}
+      {% set b = report_data.budget_data %}
+      <div class="table-responsive">
+        <table class="table table-fin align-middle">
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th class="text-end">Budgeted Amount</th>
+              <th class="text-end">Actual Spent</th>
+              <th class="text-end">Remaining</th>
+              <th class="text-end">Utilization</th>
+              <th class="text-center">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in b.budget_items %}
+              <tr>
+                <td class="fw-bold text-dark">{{ item.category }}</td>
+                <td class="text-end small">{{ item.budgeted | currency }}</td>
+                <td class="text-end small text-expense">{{ item.spent | currency }}</td>
+                <td class="text-end small fw-semibold {% if item.remaining < 0 %}text-danger{% else %}text-income{% endif %}">
+                  {{ item.remaining | currency }}
+                </td>
+                <td class="text-end small fw-bold">{{ item.utilization }}%</td>
+                <td class="text-center">
+                  <span class="badge {% if item.alert_level == 'critical' %}badge-critical{% elif item.alert_level == 'warning' %}badge-warning{% else %}badge-normal{% endif %}">
+                    {{ item.alert_level.upper() }}
+                  </span>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot class="table-light fw-bold">
+            <tr>
+              <td>TOTALS</td>
+              <td class="text-end">{{ b.total_budgeted | currency }}</td>
+              <td class="text-end text-expense">{{ b.total_spent | currency }}</td>
+              <td class="text-end {% if b.total_remaining < 0 %}text-danger{% else %}text-income{% endif %}">{{ b.total_remaining | currency }}</td>
+              <td class="text-end">{{ b.overall_utilization }}%</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

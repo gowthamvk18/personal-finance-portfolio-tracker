@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}403 Forbidden - Finance Tracker{% endblock %}
+{% block content %}
+<div class="text-center py-5">
+  <div class="mb-4">
+    <i class="fa-solid fa-lock fa-4x text-danger"></i>
+  </div>
+  <h1 class="display-5 fw-bold">403 - Access Forbidden</h1>
+  <p class="lead text-muted mb-4">You do not have permission to view or modify this financial record. User isolation is strictly enforced.</p>
+  <a href="{{ url_for('dashboard.index') }}" class="btn btn-primary px-4">
+    <i class="fa-solid fa-house me-2"></i> Return to Dashboard
+  </a>
+</div>
+{% endblock %}

@@ -1,0 +1,353 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - Personal Finance Portfolio Tracker{% endblock %}
+{% block page_title %}Financial Overview{% endblock %}
+
+{% block content %}
+<!-- 1. Top KPI Summary Cards -->
+<div class="row g-3 mb-4">
+  <!-- Total Income (Monthly) -->
+  <div class="col-12 col-sm-6 col-xl-2">
+    <div class="kpi-card">
+      <div class="kpi-info">
+        <div class="kpi-label">Monthly Income</div>
+        <div class="kpi-value text-income">{{ monthly_income | currency }}</div>
+        <div class="small text-muted"><i class="fa-solid fa-calendar-days me-1"></i> Current Month</div>
+      </div>
+      <div class="kpi-icon-wrap icon-income">
+        <i class="fa-solid fa-arrow-down-left"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Total Expenses (Monthly) -->
+  <div class="col-12 col-sm-6 col-xl-2">
+    <div class="kpi-card">
+      <div class="kpi-info">
+        <div class="kpi-label">Monthly Expenses</div>
+        <div class="kpi-value text-expense">{{ monthly_expense | currency }}</div>
+        <div class="small text-muted"><i class="fa-solid fa-calendar-days me-1"></i> Current Month</div>
+      </div>
+      <div class="kpi-icon-wrap icon-expense">
+        <i class="fa-solid fa-arrow-up-right"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Total Savings -->
+  <div class="col-12 col-sm-6 col-xl-2">
+    <div class="kpi-card">
+      <div class="kpi-info">
+        <div class="kpi-label">Net Savings</div>
+        <div class="kpi-value {% if monthly_savings >= 0 %}text-income{% else %}text-danger{% endif %}">
+          {{ monthly_savings | currency }}
+        </div>
+        <div class="small text-muted"><i class="fa-solid fa-piggy-bank me-1"></i> Month Cashflow</div>
+      </div>
+      <div class="kpi-icon-wrap icon-income">
+        <i class="fa-solid fa-vault"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Total Investment Value -->
+  <div class="col-12 col-sm-6 col-xl-2">
+    <div class="kpi-card">
+      <div class="kpi-info">
+        <div class="kpi-label">Investments</div>
+        <div class="kpi-value text-investment">{{ total_investment_value | currency }}</div>
+        <div class="small {% if portfolio_pl >= 0 %}text-success{% else %}text-danger{% endif %} fw-semibold">
+          <i class="fa-solid {% if portfolio_pl >= 0 %}fa-caret-up{% else %}fa-caret-down{% endif %} me-1"></i>
+          {{ portfolio_return_pct }}%
+        </div>
+      </div>
+      <div class="kpi-icon-wrap icon-investment">
+        <i class="fa-solid fa-coins"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Total Net Worth -->
+  <div class="col-12 col-sm-6 col-xl-2">
+    <div class="kpi-card">
+      <div class="kpi-info">
+        <div class="kpi-label">Net Worth</div>
+        <div class="kpi-value text-primary">{{ net_worth | currency }}</div>
+        <div class="small text-muted"><i class="fa-solid fa-scale-balanced me-1"></i> Assets - Debts</div>
+      </div>
+      <div class="kpi-icon-wrap icon-networth">
+        <i class="fa-solid fa-chart-line"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Monthly Budget Remaining -->
+  <div class="col-12 col-sm-6 col-xl-2">
+    <div class="kpi-card">
+      <div class="kpi-info">
+        <div class="kpi-label">Budget Remaining</div>
+        <div class="kpi-value {% if budget_remaining >= 0 %}text-dark{% else %}text-danger{% endif %}">
+          {{ budget_remaining | currency }}
+        </div>
+        <div class="small text-muted">{{ budget_utilization }}% spent</div>
+      </div>
+      <div class="kpi-icon-wrap icon-budget">
+        <i class="fa-solid fa-wallet"></i>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 2. Main Visualizations Charts Grid -->
+<div class="row g-4 mb-4">
+  <!-- Chart 1: Monthly Income vs Expenses (Bar) -->
+  <div class="col-12 col-lg-8">
+    <div class="card-fin h-100">
+      <div class="card-header">
+        <div class="d-flex align-items-center gap-2">
+          <i class="fa-solid fa-chart-column text-primary"></i>
+          <span>Income vs. Expenses (Last 6 Months)</span>
+        </div>
+        <a href="{{ url_for('transactions.index') }}" class="btn btn-sm btn-link text-decoration-none">View All</a>
+      </div>
+      <div class="card-body">
+        <div style="height: 300px; position: relative;">
+          <canvas id="monthlyCashflowChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chart 2: Expense Category Distribution (Doughnut) -->
+  <div class="col-12 col-lg-4">
+    <div class="card-fin h-100">
+      <div class="card-header">
+        <div class="d-flex align-items-center gap-2">
+          <i class="fa-solid fa-chart-pie text-danger"></i>
+          <span>Expense Categories</span>
+        </div>
+        <span class="badge bg-light text-muted border">Current Month</span>
+      </div>
+      <div class="card-body">
+        <div style="height: 300px; position: relative;">
+          <canvas id="expenseCategoryChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 3. Secondary Charts Grid -->
+<div class="row g-4 mb-4">
+  <!-- Chart 3: Investment Asset Allocation (Pie) -->
+  <div class="col-12 col-lg-4">
+    <div class="card-fin h-100">
+      <div class="card-header">
+        <div class="d-flex align-items-center gap-2">
+          <i class="fa-solid fa-coins text-warning"></i>
+          <span>Asset Allocation</span>
+        </div>
+        <a href="{{ url_for('investments.index') }}" class="btn btn-sm btn-link text-decoration-none">Manage</a>
+      </div>
+      <div class="card-body">
+        <div style="height: 280px; position: relative;">
+          <canvas id="assetAllocationChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chart 4: Monthly Savings Trend (Line) -->
+  <div class="col-12 col-lg-4">
+    <div class="card-fin h-100">
+      <div class="card-header">
+        <div class="d-flex align-items-center gap-2">
+          <i class="fa-solid fa-arrow-trend-up text-success"></i>
+          <span>Monthly Savings Trend</span>
+        </div>
+        <span class="badge bg-light text-muted border">6 Months</span>
+      </div>
+      <div class="card-body">
+        <div style="height: 280px; position: relative;">
+          <canvas id="savingsTrendChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chart 5: Portfolio Profit / Loss (Horizontal Bar) -->
+  <div class="col-12 col-lg-4">
+    <div class="card-fin h-100">
+      <div class="card-header">
+        <div class="d-flex align-items-center gap-2">
+          <i class="fa-solid fa-chart-line text-purple"></i>
+          <span>Holdings Profit / Loss</span>
+        </div>
+        <a href="{{ url_for('analytics.index') }}" class="btn btn-sm btn-link text-decoration-none">Analytics</a>
+      </div>
+      <div class="card-body">
+        <div style="height: 280px; position: relative;">
+          <canvas id="portfolioPerformanceChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 4. Operational Dashboard Sections -->
+<div class="row g-4">
+  <!-- Recent Transactions -->
+  <div class="col-12 col-lg-7">
+    <div class="card-fin h-100">
+      <div class="card-header">
+        <div class="d-flex align-items-center gap-2">
+          <i class="fa-solid fa-receipt text-primary"></i>
+          <span>Recent Transactions</span>
+        </div>
+        <a href="{{ url_for('transactions.index') }}" class="btn btn-sm btn-outline-primary">View Ledger</a>
+      </div>
+      <div class="card-body p-0">
+        {% if recent_transactions %}
+          <div class="table-responsive">
+            <table class="table table-fin align-middle">
+              <thead>
+                <tr>
+                  <th>Description</th>
+                  <th>Category</th>
+                  <th>Date</th>
+                  <th class="text-end">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for t in recent_transactions %}
+                  <tr>
+                    <td>
+                      <div class="fw-semibold text-dark">{{ t.description }}</div>
+                      <div class="small text-muted">{{ t.payment_method }}</div>
+                    </td>
+                    <td>
+                      <span class="badge bg-light text-dark border">{{ t.category }}</span>
+                    </td>
+                    <td class="small text-muted">{{ t.transaction_date | date_format }}</td>
+                    <td class="text-end fw-bold {% if t.is_income %}text-income{% else %}text-expense{% endif %}">
+                      {% if t.is_income %}+{% else %}-{% endif %}{{ t.decimal_amount | currency }}
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="text-center py-5 text-muted">
+            <i class="fa-solid fa-receipt fa-2x mb-2"></i>
+            <p>No transactions recorded yet.</p>
+            <a href="{{ url_for('transactions.add') }}" class="btn btn-sm btn-primary">Record First Transaction</a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Sidebar: Top Spending & Budget Utilization -->
+  <div class="col-12 col-lg-5">
+    <!-- Top Spending Categories -->
+    <div class="card-fin mb-4">
+      <div class="card-header">
+        <div class="d-flex align-items-center gap-2">
+          <i class="fa-solid fa-fire text-danger"></i>
+          <span>Top Spending Categories</span>
+        </div>
+        <span class="small text-muted">This Month</span>
+      </div>
+      <div class="card-body">
+        {% if top_categories %}
+          {% for c in top_categories %}
+            <div class="mb-3">
+              <div class="d-flex justify-content-between small fw-semibold mb-1">
+                <span>{{ c.category }}</span>
+                <span>{{ c.total | currency }} ({{ c.percentage }}%)</span>
+              </div>
+              <div class="progress progress-fin">
+                <div class="progress-bar bg-danger" role="progressbar" style="width: {{ c.percentage }}%"></div>
+              </div>
+            </div>
+          {% endfor %}
+        {% else %}
+          <p class="text-muted small text-center my-3">No expenses recorded for this month.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Savings Goals Progress -->
+    <div class="card-fin mb-4">
+      <div class="card-header">
+        <div class="d-flex align-items-center gap-2">
+          <i class="fa-solid fa-bullseye text-success"></i>
+          <span>Savings Goals Progress</span>
+        </div>
+        <a href="{{ url_for('savings.index') }}" class="btn btn-sm btn-link text-decoration-none">All Goals</a>
+      </div>
+      <div class="card-body">
+        {% if savings_goals %}
+          {% for g in savings_goals %}
+            <div class="mb-3">
+              <div class="d-flex justify-content-between small fw-semibold mb-1">
+                <span>{{ g.name }}</span>
+                <span>{{ g.decimal_current | currency }} / {{ g.decimal_target | currency }}</span>
+              </div>
+              <div class="progress progress-fin">
+                <div class="progress-bar {% if g.is_completed %}bg-success{% else %}bg-primary{% endif %}" role="progressbar" style="width: {{ g.percentage_completed }}%"></div>
+              </div>
+              <div class="d-flex justify-content-between text-muted" style="font-size: 0.75rem;">
+                <span>{{ g.percentage_completed }}% completed</span>
+                <span>Target: {{ g.target_date | date_format }}</span>
+              </div>
+            </div>
+          {% endfor %}
+        {% else %}
+          <p class="text-muted small text-center my-3">No savings goals created yet.</p>
+          <div class="text-center">
+            <a href="{{ url_for('savings.add') }}" class="btn btn-sm btn-outline-success">Set a Goal</a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Monthly Budget Utilization -->
+    <div class="card-fin">
+      <div class="card-header">
+        <div class="d-flex align-items-center gap-2">
+          <i class="fa-solid fa-scale-balanced text-primary"></i>
+          <span>Budget Utilization</span>
+        </div>
+        <a href="{{ url_for('budgets.index') }}" class="btn btn-sm btn-link text-decoration-none">Manage</a>
+      </div>
+      <div class="card-body">
+        {% if budget_items %}
+          {% for b in budget_items %}
+            <div class="mb-3">
+              <div class="d-flex justify-content-between small fw-semibold mb-1">
+                <span>{{ b.category }}</span>
+                <span>{{ b.spent | currency }} of {{ b.budgeted | currency }}</span>
+              </div>
+              <div class="progress progress-fin">
+                <div class="progress-bar {% if b.alert_level == 'critical' %}progress-bar-critical{% elif b.alert_level == 'warning' %}progress-bar-warning{% else %}progress-bar-normal{% endif %}" role="progressbar" style="width: {{ [b.utilization, 100.0] | min }}%"></div>
+              </div>
+              <div class="d-flex justify-content-between text-muted" style="font-size: 0.75rem;">
+                <span class="{% if b.alert_level == 'critical' %}text-danger fw-bold{% elif b.alert_level == 'warning' %}text-warning fw-bold{% endif %}">
+                  {{ b.alert_message }}
+                </span>
+                <span>{{ b.utilization }}%</span>
+              </div>
+            </div>
+          {% endfor %}
+        {% else %}
+          <p class="text-muted small text-center my-3">No budgets configured for this month.</p>
+          <div class="text-center">
+            <a href="{{ url_for('budgets.add') }}" class="btn btn-sm btn-outline-primary">Set Monthly Budget</a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

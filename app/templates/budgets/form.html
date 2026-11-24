@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} - Personal Finance Portfolio Tracker{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-8 col-lg-6">
+    <div class="card-fin">
+      <div class="card-header">
+        <span class="fw-bold"><i class="fa-solid fa-wallet text-primary me-2"></i>{{ title }}</span>
+        <a href="{{ url_for('budgets.index') }}" class="btn btn-sm btn-outline-secondary">
+          <i class="fa-solid fa-arrow-left me-1"></i> Back to Budgets
+        </a>
+      </div>
+
+      <div class="card-body p-4">
+        <form method="POST" action="" novalidate>
+          {{ form.hidden_tag() }}
+
+          <!-- Category -->
+          <div class="mb-3">
+            {{ form.category.label(class="form-label fw-semibold small") }}
+            {{ form.category(class="form-select" + (" is-invalid" if form.category.errors else "")) }}
+            {% for error in form.category.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="row g-3 mb-3">
+            <!-- Amount -->
+            <div class="col-12 col-sm-6">
+              {{ form.amount.label(class="form-label fw-semibold small") }}
+              <div class="input-group">
+                <span class="input-group-text bg-light fw-bold text-muted">{{ user_currency_symbol }}</span>
+                {{ form.amount(class="form-control" + (" is-invalid" if form.amount.errors else ""), placeholder="10000.00") }}
+              </div>
+              {% for error in form.amount.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <!-- Month Year -->
+            <div class="col-12 col-sm-6">
+              {{ form.month_year.label(class="form-label fw-semibold small") }}
+              {{ form.month_year(class="form-control" + (" is-invalid" if form.month_year.errors else ""), placeholder="YYYY-MM") }}
+              {% for error in form.month_year.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+              {% endfor %}
+              <div class="form-text small">e.g. 2026-11</div>
+            </div>
+          </div>
+
+          <!-- Notes -->
+          <div class="mb-4">
+            {{ form.notes.label(class="form-label fw-semibold small") }}
+            {{ form.notes(class="form-control" + (" is-invalid" if form.notes.errors else ""), placeholder="e.g. Planned monthly cap for groceries & dining") }}
+            {% for error in form.notes.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="d-flex gap-2">
+            {{ form.submit(class="btn btn-primary px-4 fw-semibold") }}
+            <a href="{{ url_for('budgets.index') }}" class="btn btn-outline-secondary px-3">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+{% block title %}Portfolio Analytics - Personal Finance Portfolio Tracker{% endblock %}
+{% block page_title %}Portfolio Analytics &amp; Performance{% endblock %}
+
+{% block content %}
+<!-- KPI Performance Cards -->
+<div class="row g-3 mb-4">
+  <div class="col-12 col-sm-6 col-xl-3">
+    <div class="kpi-card py-3">
+      <div class="kpi-info">
+        <div class="kpi-label">Capital Deployed</div>
+        <div class="kpi-value text-dark fs-4">{{ portfolio.total_invested | currency }}</div>
+        <div class="small text-muted">Cost basis</div>
+      </div>
+      <div class="kpi-icon-wrap icon-investment" style="width:40px;height:40px;font-size:1.1rem;">
+        <i class="fa-solid fa-layer-group"></i>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-sm-6 col-xl-3">
+    <div class="kpi-card py-3">
+      <div class="kpi-info">
+        <div class="kpi-label">Current Valuation</div>
+        <div class="kpi-value text-primary fs-4">{{ portfolio.total_current | currency }}</div>
+        <div class="small text-muted">Current portfolio worth</div>
+      </div>
+      <div class="kpi-icon-wrap icon-networth" style="width:40px;height:40px;font-size:1.1rem;">
+        <i class="fa-solid fa-chart-pie"></i>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-sm-6 col-xl-3">
+    <div class="kpi-card py-3">
+      <div class="kpi-info">
+        <div class="kpi-label">Absolute Return (P&amp;L)</div>
+        <div class="kpi-value {% if portfolio.total_profit_loss >= 0 %}text-income{% else %}text-danger{% endif %} fs-4">
+          {% if portfolio.total_profit_loss >= 0 %}+{% endif %}{{ portfolio.total_profit_loss | currency }}
+        </div>
+        <div class="small text-muted">Total capital gain/loss</div>
+      </div>
+      <div class="kpi-icon-wrap {% if portfolio.total_profit_loss >= 0 %}icon-income{% else %}icon-expense{% endif %}" style="width:40px;height:40px;font-size:1.1rem;">
+        <i class="fa-solid {% if portfolio.total_profit_loss >= 0 %}fa-arrow-trend-up{% else %}fa-arrow-trend-down{% endif %}"></i>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-sm-6 col-xl-3">
+    <div class="kpi-card py-3">
+      <div class="kpi-info">
+        <div class="kpi-label">Return Percentage</div>
+        <div class="kpi-value {% if portfolio.total_return_percentage >= 0 %}text-income{% else %}text-danger{% endif %} fs-4">
+          {% if portfolio.total_return_percentage >= 0 %}+{% endif %}{{ portfolio.total_return_percentage }}%
+        </div>
+        <div class="small text-muted">Portfolio ROI</div>
+      </div>
+      <div class="kpi-icon-wrap icon-budget" style="width:40px;height:40px;font-size:1.1rem;">
+        <i class="fa-solid fa-gauge-high"></i>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Best and Lowest Performing Assets Highlight Cards -->
+<div class="row g-4 mb-4">
+  <!-- Best Performer -->
+  <div class="col-12 col-md-6">
+    <div class="card-fin h-100 border-start border-4 border-success">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span class="badge badge-fin badge-income"><i class="fa-solid fa-trophy me-1"></i> Best Performing Asset</span>
+          <span class="small text-muted">Top Return</span>
+        </div>
+        {% if portfolio.best_performer %}
+          <h5 class="fw-bold text-dark mb-1">{{ portfolio.best_performer.name }}</h5>
+          <div class="small text-muted mb-3">{{ portfolio.best_performer.type_display }} &bull; {{ portfolio.best_performer.institution }}</div>
+          <div class="row g-2 text-center bg-light p-2 rounded">
+            <div class="col-4">
+              <div class="text-muted small" style="font-size:0.75rem;">Invested</div>
+              <div class="fw-semibold small">{{ portfolio.best_performer.invested_value | currency }}</div>
+            </div>
+            <div class="col-4">
+              <div class="text-muted small" style="font-size:0.75rem;">Current</div>
+              <div class="fw-semibold small">{{ portfolio.best_performer.current_value | currency }}</div>
+            </div>
+            <div class="col-4">
+              <div class="text-muted small" style="font-size:0.75rem;">Gain / Return</div>
+              <div class="fw-bold small text-success">+{{ portfolio.best_performer.return_percentage }}%</div>
+            </div>
+          </div>
+        {% else %}
+          <p class="text-muted small mb-0">No investment data available.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Lowest Performer -->
+  <div class="col-12 col-md-6">
+    <div class="card-fin h-100 border-start border-4 border-warning">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span class="badge badge-fin badge-warning"><i class="fa-solid fa-arrow-down-short-wide me-1"></i> Lowest Performing Asset</span>
+          <span class="small text-muted">Lowest Return</span>
+        </div>
+        {% if portfolio.worst_performer %}
+          <h5 class="fw-bold text-dark mb-1">{{ portfolio.worst_performer.name }}</h5>
+          <div class="small text-muted mb-3">{{ portfolio.worst_performer.type_display }} &bull; {{ portfolio.worst_performer.institution }}</div>
+          <div class="row g-2 text-center bg-light p-2 rounded">
+            <div class="col-4">
+              <div class="text-muted small" style="font-size:0.75rem;">Invested</div>
+              <div class="fw-semibold small">{{ portfolio.worst_performer.invested_value | currency }}</div>
+            </div>
+            <div class="col-4">
+              <div class="text-muted small" style="font-size:0.75rem;">Current</div>
+              <div class="fw-semibold small">{{ portfolio.worst_performer.current_value | currency }}</div>
+            </div>
+            <div class="col-4">
+              <div class="text-muted small" style="font-size:0.75rem;">Gain / Return</div>
+              <div class="fw-bold small {% if portfolio.worst_performer.profit_loss >= 0 %}text-success{% else %}text-danger{% endif %}">
+                {% if portfolio.worst_performer.profit_loss >= 0 %}+{% endif %}{{ portfolio.worst_performer.return_percentage }}%
+              </div>
+            </div>
+          </div>
+        {% else %}
+          <p class="text-muted small mb-0">No investment data available.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Visualizations Grid -->
+<div class="row g-4 mb-4">
+  <!-- Asset Allocation Pie -->
+  <div class="col-12 col-lg-5">
+    <div class="card-fin h-100">
+      <div class="card-header">
+        <span class="fw-bold"><i class="fa-solid fa-chart-pie text-primary me-2"></i>Asset Allocation Breakdown</span>
+      </div>
+      <div class="card-body">
+        <div style="height: 320px; position: relative;">
+          <canvas id="assetAllocationChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Holdings Performance Comparison -->
+  <div class="col-12 col-lg-7">
+    <div class="card-fin h-100">
+      <div class="card-header">
+        <span class="fw-bold"><i class="fa-solid fa-chart-simple text-purple me-2"></i>Holdings Profit &amp; Loss Ranking</span>
+      </div>
+      <div class="card-body">
+        <div style="height: 320px; position: relative;">
+          <canvas id="portfolioPerformanceChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Investment Type Comparison Table -->
+<div class="card-fin">
+  <div class="card-header">
+    <span class="fw-bold"><i class="fa-solid fa-table-list text-primary me-2"></i>Asset Class Comparison &amp; Breakdown</span>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-fin align-middle">
+        <thead>
+          <tr>
+            <th>Asset Class</th>
+            <th>Holdings Count</th>
+            <th class="text-end">Invested Capital</th>
+            <th class="text-end">Current Value</th>
+            <th class="text-end">Unrealized P&amp;L</th>
+            <th class="text-end">Return %</th>
+            <th class="text-end">Portfolio Share</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for a in portfolio.allocation %}
+            <tr>
+              <td>
+                <span class="d-inline-block rounded-circle me-2" style="width:10px;height:10px;background-color:{{ a.color }};"></span>
+                <span class="fw-bold text-dark">{{ a.name }}</span>
+              </td>
+              <td>{{ a.count }}</td>
+              <td class="text-end small">{{ a.invested | currency }}</td>
+              <td class="text-end small fw-semibold text-dark">{{ a.current | currency }}</td>
+              <td class="text-end small fw-bold {% if a.profit_loss >= 0 %}text-income{% else %}text-danger{% endif %}">
+                {% if a.profit_loss >= 0 %}+{% endif %}{{ a.profit_loss | currency }}
+              </td>
+              <td class="text-end small fw-bold {% if a.return_pct >= 0 %}text-income{% else %}text-danger{% endif %}">
+                {% if a.return_pct >= 0 %}+{% endif %}{{ a.return_pct }}%
+              </td>
+              <td class="text-end small fw-bold">{{ a.percentage }}%</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot class="table-light">
+          <tr class="fw-bold">
+            <td>TOTAL PORTFOLIO</td>
+            <td>{{ portfolio.holdings_count }}</td>
+            <td class="text-end">{{ portfolio.total_invested | currency }}</td>
+            <td class="text-end text-primary">{{ portfolio.total_current | currency }}</td>
+            <td class="text-end {% if portfolio.total_profit_loss >= 0 %}text-income{% else %}text-danger{% endif %}">
+              {% if portfolio.total_profit_loss >= 0 %}+{% endif %}{{ portfolio.total_profit_loss | currency }}
+            </td>
+            <td class="text-end {% if portfolio.total_return_percentage >= 0 %}text-income{% else %}text-danger{% endif %}">
+              {% if portfolio.total_return_percentage >= 0 %}+{% endif %}{{ portfolio.total_return_percentage }}%
+            </td>
+            <td class="text-end">100.0%</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
